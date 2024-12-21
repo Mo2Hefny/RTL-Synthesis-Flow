@@ -1,8 +1,8 @@
 module carry_bypass_adder #(parameter W=32, parameter N=4) (
-    input [W-1:0] a,
-    input [W-1:0] b,
+    input signed [W-1:0] a,
+    input signed [W-1:0] b,
     input cin,
-    output [W-1:0] sum,
+    output signed [W-1:0] sum,
     output cout
 );
 
@@ -16,8 +16,8 @@ module carry_bypass_adder #(parameter W=32, parameter N=4) (
             wire[N-1:0] g;              // g[i] indicates whether the ith bit generates a carry
             wire[N-1:0] carry_out;
 
-            assign p = a[N*(i + 1) - 1: N] | b[N*i +: N];
-            assign g = a[N*(i + 1) - 1: N] & b[N*i +: N];
+            assign p = a[N*(i + 1) - 1: N*i] | b[N*(i + 1) - 1: N*i];
+            assign g = a[N*(i + 1) - 1: N*i] & b[N*(i + 1) - 1: N*i];
             assign carry_out[0] = c[i];
 
             genvar j;
