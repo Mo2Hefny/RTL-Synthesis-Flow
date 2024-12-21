@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "version": 2,
+    "flow": [
+      "Yosys.Synthesis",
+      "OpenROAD.Floorplan",
+      "OpenROAD.GlobalPlacementSkipIO",
+      "OpenROAD.IOPlacement",
+      "OpenROAD.GlobalPlacement",
+      "OpenROAD.RepairDesignPostGPL",
+      "OpenROAD.DetailedPlacement",
+      "OpenROAD.CTS",
+      "OpenROAD.GlobalRouting",
+      "OpenROAD.DetailedRouting",
+      "OpenROAD.RCX",
+      "OpenROAD.STAPrePNR",
+      "OpenROAD.STAMidPnR",
+      "OpenROAD.STAPostPNR"
+    ]
+  },
+  "DESIGN_NAME": "carry_select_adder",
+  "VERILOG_FILES": "dir::carry_select_adder.v",
+  "PNR_SDC_FILE": "dir::carry_select_adder.sdc",
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 10.0,
+  "SYNTH_STRATEGY": "AREA 0",
+  "FP_CORE_UTIL": 50
+
+}
