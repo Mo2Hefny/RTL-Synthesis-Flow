@@ -7,6 +7,7 @@ module tb_multiplier_tree;
     // Inputs
     reg signed [W-1:0] a;
     reg signed [W-1:0] b;
+    reg signed [2*W-1:0] expected;
 
     // Output
     wire signed [2*W-1:0] product;
@@ -38,11 +39,13 @@ module tb_multiplier_tree;
 
         // Test 5: Maximum values
         a = 32'h7FFFFFFF; b = 32'h7FFFFFFF;
-        #10 $display("Test 5: a = %d, b = %d, product = %d (Expected: Very Large Positive Value)", a, b, product);
+        expected = 64'd4611686014132420609;
+        #10 $display("Test 5: a = %d, b = %d, product = %d (Expected: %d)", a, b, product, expected);
 
         // Test 6: Minimum values
         a = 32'h80000000; b = 32'h80000000;
-        #10 $display("Test 6: a = %d, b = %d, product = %d (Expected: Very Large Positive Value)", a, b, product);
+        expected = 64'd4611686018427387904;
+        #10 $display("Test 6: a = %d, b = %d, product = %d (Expected: %d)", a, b, product, expected);
 
         // End simulation
         #50 $stop;

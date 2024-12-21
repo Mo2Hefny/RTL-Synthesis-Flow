@@ -10,6 +10,7 @@ module tb_sequential_multiplier;
     reg start;
     reg signed [W-1:0] a;
     reg signed [W-1:0] b;
+    reg signed [2*W-1:0] expected;
 
     // Outputs
     wire signed [2*W-1:0] product;
@@ -70,14 +71,16 @@ module tb_sequential_multiplier;
         // Test 5: Maximum values
         #10 a = 32'h7FFFFFFF; b = 32'h7FFFFFFF; start = 1; // Largest positive values
         #10 start = 0;
+        expected = 64'd4611686014132420609;
         wait (done);
-        $display("Test 5: a = %d, b = %d, product = %d (Expected: Very Large Positive Value)", a, b, product);
+        $display("Test 5: a = %d, b = %d, product = %d (Expected: %d)", a, b, product, expected);
 
         // Test 6: Minimum values
         #10 a = 32'h80000000; b = 32'h80000000; start = 1; // Largest negative values
         #10 start = 0;
+        expected = 64'd4611686018427387904;
         wait (done);
-        $display("Test 6: a = %d, b = %d, product = %d (Expected: Very Large Positive Value)", a, b, product);
+        $display("Test 6: a = %d, b = %d, product = %d (Expected: %d)", a, b, product, expected);
 
         // End simulation
         #50 $stop;

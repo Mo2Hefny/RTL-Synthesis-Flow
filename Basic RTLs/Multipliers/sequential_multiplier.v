@@ -8,8 +8,8 @@ module sequential_multiplier #(parameter W = 32) (
     output reg done
 );
 
-    reg signed [W-1:0] a_reg, b_reg;
-    reg signed [2*W-1:0] product_reg;
+    reg [W-1:0] a_reg, b_reg;
+    reg [2*W-1:0] product_reg;
     reg [5:0] count; // Supports up to 32-bit multiplication (log2(W) = 6 bits)
     reg is_negative;
     reg running;

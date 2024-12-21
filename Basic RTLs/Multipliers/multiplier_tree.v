@@ -20,17 +20,19 @@ module multiplier_tree #(parameter W=32, parameter N=4) (
     wire [2*W-1:0] sum [W-1:0];                 // sum[i] stores the shifted partial product
     generate
         for (i = 0; i < W; i = i + 1) begin : mul_tree_sum_block
-            assign sum[i] = {p[i], i{1'b0}};
+            assign sum[i] = partial_p[i] << i;
         end
     endgenerate
 
-    wire [2*W-1:0] final_sum = {2*W{1'b0}};
-    generate
-        for (i = 0; i < W; i = i + 1) begin : mul_tree_final_sum_block
-            assign final_sum = final_sum + sum[i];
+    reg [2*W-1:0] final_sum;
+    integer j;
+    always @(*) begin
+        final_sum = 0;
+        for (j = 0; j < W; j = j + 1) begin
+            final_sum = final_sum + sum[j];
         end
-    endgenerate
+    end
 
     // If the result is negative, turn it into a negative number
-    assign p = is_negative ? ~final_sum + 1 : final_sum;
+    assign product = is_negative ? ~final_sum + 1 : final_sum;
 endmodule

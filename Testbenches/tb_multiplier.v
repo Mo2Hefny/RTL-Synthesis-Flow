@@ -59,8 +59,8 @@ module tb_combined_multipliers;
         perform_test(-25, 12, -300);      // Test 2: Negative * Positive
         perform_test(-8, -8, 64);         // Test 3: Negative * Negative
         perform_test(0, 123, 0);          // Test 4: Zero * Positive
-        perform_test(32'h7FFFFFFF, 32'h7FFFFFFF, 4611686014132420609); // Test 5: Max Positive
-        perform_test(32'h80000000, 32'h80000000, 4611686018427387904); // Test 6: Max Negative
+        perform_test(32'h7FFFFFFF, 32'h7FFFFFFF, 64'd4611686014132420609); // Test 5: Max Positive
+        perform_test(32'h80000000, 32'h80000000, 64'd4611686018427387904); // Test 6: Max Negative
 
         // End simulation
         #50 $stop;
@@ -94,6 +94,8 @@ module tb_combined_multipliers;
             end else begin
                 $display("PASS: Expected = %d, Sequential = %d, Tree = %d", expected, seq_product, tree_product);
             end
+            
+            #10;
         end
     endtask
 endmodule
