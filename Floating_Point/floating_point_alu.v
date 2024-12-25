@@ -1,12 +1,9 @@
 module floating_point_alu #(parameter W=32) (
-    input clk,
-    input rst,
     input signed [W-1:0] a,
     input signed [W-1:0] b,
     input sel,
-    output reg signed [W-1:0] result.
+    output reg signed [W-1:0] result,
     output reg overflow
-    output reg done
 );
 
     wire [W-1:0] adder_result;
@@ -25,14 +22,13 @@ module floating_point_alu #(parameter W=32) (
     );
 
     floating_point_mt multiplier (
-        .clk(clk),
-        .rst(rst),
-        .start(start),
         .a(a),
         .b(b),
-        .product(multiplier_result)
+        .result(multiplier_result),
         .overflow(overflow_multiplier)
-        .done(done)
     );
+
+    assign result = sel ? multiplier_result : adder_result;
+    assign overflow = sel ? overflow_multiplier : overflow_adder;
 
 endmodule

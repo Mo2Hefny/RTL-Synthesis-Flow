@@ -1,12 +1,14 @@
 `timescale 1ns / 1ps
 module floating_point_cla_tb #(parameter W = 32);
     reg [W-1:0] A, B;
+    reg cin;
     wire [W-1:0] result;
     real value;
-    floating_point_cla #(32) F_Add (.a(A), .b(B), .sum(result));
+    floating_point_cla #(32) F_Add (.a(A), .b(B), .cin(cin), .sum(result));
 
     initial  
     begin
+        cin = 0;
         A = 32'b0_10000000_10011001100110011001100;
         B = 32'b0_10000001_00001100110011001100110;
         #20

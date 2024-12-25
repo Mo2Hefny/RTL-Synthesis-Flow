@@ -1,12 +1,8 @@
 module floating_point_mt (
-    input clk,
-    input rst,
-    input start,
     input [31:0] a,      
     input [31:0] b,     
     output [31:0] result,
-    output overflow,
-    output done  
+    output overflow
 );
 
     wire sign_a = a[31];
@@ -21,14 +17,10 @@ module floating_point_mt (
     wire [9:0] exp_sum = exp_a + exp_b - 8'd127;
 
     wire [47:0] product;
-    sequential_multiplier #(24) tree_mult (
-        .clk(clk),
-        .rst(rst),
-        .start(start),
+    simple_multiplier #(24) simple_mul (
         .a(in_a),
         .b(in_b),
-        .product(product),
-        .done(done)
+        .product(product)
     );
 
     wire product_msb = product[47];

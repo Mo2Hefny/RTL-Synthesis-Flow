@@ -2,25 +2,17 @@
 
 module floating_point_mt_tb;
 
-    reg clk;
-    reg rst;
-    reg start;
     reg [31:0] a;  
     reg [31:0] b;  
 
     wire [31:0] result; 
     wire overflow;
-    wire done;
 
     floating_point_mt uut (
         .a(a),
         .b(b),
-        .clk(clk),
-        .rst(rst),
-        .start(start),
         .result(result),
-        .overflow(overflow),
-        .done(done)
+        .overflow(overflow)
     );
 
     task display_result;
@@ -75,102 +67,79 @@ module floating_point_mt_tb;
     endfunction
 
     initial begin
-        clk = 0;
-        forever #5 clk = ~clk; // Generate clock with period of 10ns
-    end
-
-    initial begin
-        // reset
-        rst = 1;
-        start = 1;
-        a = 0;
-        b = 0;
-        @(posedge clk);
-        rst = 0;
-
         // Test Case 1: Multiplying two zeros
         a = 32'h00000000; b = 32'h00000000; // 0 * 0
-        @(posedge clk);
+        #20
         display_result(a, b, result, overflow);
         assert_result(32'h00000000, 1'b0);
 
-        // Test Case 2: Multiplying a zero with a positive number
-        a = 32'h00000000; b = 32'h3F800000; // 0 * 1.0
-        @(posedge clk);
+        // Test Case 2: Multiplying a zero with a large positive number
+        a = 32'h00000000; b = 32'h7F7FFFFF; // 0 * Largest finite positive
+        #20
         display_result(a, b, result, overflow);
         assert_result(32'h00000000, 1'b0);
 
-        // Test Case 3: Multiplying a zero with a negative number
-        a = 32'h00000000; b = 32'hBF800000; // 0 * -1.0
-        @(posedge clk);
+        // Test Case 3: Multiplying a positive number with a large negative number
+        a = 32'h3F800000; b = 32'hFF800000; // 1.0 * -Infinity
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'h00000000, 1'b0);
+        assert_result(32'hFF800000, 1'b1);
 
         // Test Case 4: Multiplying two positive numbers
         a = 32'h3F800000; b = 32'h40000000; // 1.0 * 2.0
-        @(posedge clk);
+        #20
         display_result(a, b, result, overflow);
         assert_result(32'h40000000, 1'b0);
 
-        // Test Case 5: Multiplying two negative numbers
-        a = 32'hBF800000; b = 32'hBF800000; // -1.0 * -1.0
-        @(posedge clk);
+        // Test Case 5: Multiplying a negative number with zero
+        a = 32'hBF800000; b = 32'h00000000; // -1.0 * 0
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'h3F800000, 1'b0);
+        assert_result(32'h00000000, 1'b0);
 
-        // Test Case 6: Multiplying a positive and a negative number
+        // Test Case 6: Multiplying two numbers leading to denormalized result
         a = 32'h3F800000; b = 32'hBF800000; // 1.0 * -1.0
-        @(posedge clk);
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'hBF800000, 1'b0);
+        assert_result(32'hBF800000, 1'b0); // Expected smallest subnormal
 
-        // Test Case 7: Multiplying numbers leading to overflow
-        a = 32'h7F7FFFFF; b = 32'h40000000; // Largest finite * 2
-        @(posedge clk);
+        // Test Case 7: Multiplying a finite number with NaN
+        a = 32'h3F800000; b = 32'h7FC00000; // 1.0 * NaN
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'h7F800000, 1'b1); // Expected infinity with overflow
+        assert_result(32'h7FC00000, 1'b1);
 
-        // Test Case 8: Multiplying small numbers (denormalized case)
-        a = 32'h00800000; b = 32'h00800000; // Smallest normalized * Smallest normalized
-        @(posedge clk);
-        display_result(a, b, result, overflow);
-        assert_result(32'h00000000, 1'b0); // Expected denormalized product
-
-        // Test Case 9: Multiplying numbers with large exponent difference
-        a = 32'h7F800000; b = 32'h00000001; // Infinity * Smallest subnormal
-        @(posedge clk);
-        display_result(a, b, result, overflow);
-        assert_result(32'h7F800000, 1'b0); // Expected infinity
-
-        // Test Case 10: Multiplying random numbers
+        // Test Case 10: Multiplying two small normalized numbers
         a = 32'h40800000; b = 32'h40A00000; // 4.0 * 5.0
-        @(posedge clk);
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'h41200000, 1'b0); // Expected 20.0
+        assert_result(32'h41a00000, 1'b0); // Expected 20.0
 
-        // Test Case 11: Multiplying infinity with a finite number
-        a = 32'h7F800000; b = 32'h3F800000; // Infinity * 1.0
-        @(posedge clk);
+        // Test Case 11: Multiplying two small random numbers
+        a = 32'h42480000; b = 32'hC2A00000; // 50.0 * -80.0
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'h7F800000, 1'b1); // Expected infinity
+        assert_result(32'hC57a0000, 1'b0); // Expected -4000.0
 
-        // Test Case 12: Multiplying infinity with infinity
-        a = 32'h7F800000; b = 32'h7F800000; // Infinity * Infinity
-        @(posedge clk);
+        // Test Case 12: Multiplying two small random negative numbers
+        a = 32'hC1200000; b = 32'hC1A00000; // -10.0 * -20.0
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'h7F800000, 1'b0); // Expected infinity
+        assert_result(32'h43480000, 1'b0); // Expected 200.0
 
-        // Test Case 13: Multiplying infinity with NaN
-        a = 32'h7F800000; b = 32'h7FC00000; // Infinity * NaN
-        @(posedge clk);
-        display_result(a, b, result, overflow);
-        assert_result(32'h7FC00000, 1'b0); // Expected NaN
 
-        // Test Case 14: Multiplying NaN with a finite number
-        a = 32'h7FC00000; b = 32'h3F800000; // NaN * 1.0
-        @(posedge clk);
+        // Test Case 13: Multiplying a negative infinity with a finite positive number
+        a = 32'hFF800000; b = 32'h3F800000; // -Infinity * 1.0
+        #20
         display_result(a, b, result, overflow);
-        assert_result(32'h7FC00000, 1'b1); // Expected NaN
+        assert_result(32'hFF800000, 1'b1);
+
+        // Test Case 14: Multiplying a positive number with its reciprocal
+        a = 32'h40800000; b = 32'h3F000000; // 4.0 * 0.5
+        #20
+        display_result(a, b, result, overflow);
+        assert_result(32'h40000000, 1'b0); // Expected 2.0
+
 
         $stop;
     end

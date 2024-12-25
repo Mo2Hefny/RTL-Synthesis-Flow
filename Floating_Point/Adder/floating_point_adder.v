@@ -1,5 +1,6 @@
 module floating_point_cla #(parameter N = 32)(
     input [N-1:0] a, b,
+    input cin,
     output [N-1:0] sum,
     output cout,
     output overflow
@@ -44,7 +45,7 @@ wire [24:0] sumMantissaTemp;
 cla_adder #(25) CLA (
     .a(operandA),
     .b(operandB_adjusted),
-    .cin(1'b0), // Add carry-in for subtraction
+    .cin(cin), // Add carry-in for subtraction
     .sum(sumMantissaTemp),
     .cout(cout),                       // Carry out for overflow detection
     .overflow(overflow)
