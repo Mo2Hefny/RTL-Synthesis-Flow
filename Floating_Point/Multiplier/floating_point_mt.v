@@ -1,8 +1,12 @@
 module floating_point_mt (
+    input clk,
+    input rst,
+    input start,
     input [31:0] a,      
     input [31:0] b,     
     output [31:0] result,
-    output overflow      
+    output overflow,
+    output done  
 );
 
     // Step 1: Extract IEEE 754 fields
@@ -21,10 +25,14 @@ module floating_point_mt (
 
     // Step 4: Multiply mantissas using tree-based algorithm
     wire [47:0] mant_mult;
-    mantissa_tree_multiplier tree_mult (
+    sequential_multiplier #(24) tree_mult (
+        .clk(clk),
+        .rst(rst),
+        .start(start),
         .a(mant_a),
         .b(mant_b),
-        .product(mant_mult)
+        .product(mant_mult),
+        .done(done)
     );
 
     // Step 5: Normalize result
