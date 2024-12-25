@@ -1,17 +1,17 @@
 module floating_point_cla #(parameter N = 32)(
-    input [N-1:0] in1, in2,
-    output [N-1:0] result,
+    input [N-1:0] a, b,
+    output [N-1:0] sum,
     output cout,
     output overflow
 );
 
 // Parse the inputs: sign, exponent, and mantissa
-wire signA = in1[N-1];
-wire signB = in2[N-1];
-wire [7:0] expA = in1[N-2:N-9];
-wire [7:0] expB = in2[N-2:N-9];
-wire [23:0] mantA = (expA == 8'b0) ? {1'b0, in1[N-10:0]} : {1'b1, in1[N-10:0]};
-wire [23:0] mantB = (expB == 8'b0) ? {1'b0, in2[N-10:0]} : {1'b1, in2[N-10:0]};
+wire signA = a[N-1];
+wire signB = b[N-1];
+wire [7:0] expA = a[N-2:N-9];
+wire [7:0] expB = b[N-2:N-9];
+wire [23:0] mantA = (expA == 8'b0) ? {1'b0, a[N-10:0]} : {1'b1, a[N-10:0]};
+wire [23:0] mantB = (expB == 8'b0) ? {1'b0, b[N-10:0]} : {1'b1, b[N-10:0]};
 
 // Special case handling
 wire isNaN_A = (expA == 8'b11111111) && (mantA[22:0] != 0);
@@ -46,7 +46,7 @@ cla_adder #(25) CLA (
     .b(operandB_adjusted),
     .cin(1'b0), // Add carry-in for subtraction
     .sum(sumMantissaTemp),
-    .cout(cout)                       // Carry out for overflow detection
+    .cout(cout),                       // Carry out for overflow detection
     .overflow(overflow)
 );
 
@@ -72,8 +72,8 @@ wire [31:0] zeroResult = {1'b0, 8'b0, 23'b0}; // Canonical zero
 // Assemble the final result in IEEE 754 format
 wire [31:0] normalResult = {resultSign, normalizedExp, adjustedSumMantissa[22:0]};
 
-// Output result with priority handling of special cases
-assign result = resultNaN   ? nanResult   :
+// Output sum with priority handling of special cases
+assign sum = resultNaN   ? nanResult   :
                 resultInf   ? infResult   :
                 resultZero  ? zeroResult  :
                 normalResult;

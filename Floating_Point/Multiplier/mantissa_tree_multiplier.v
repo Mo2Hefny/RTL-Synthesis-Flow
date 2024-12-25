@@ -15,7 +15,7 @@ module mantissa_tree_multiplier (
         end
     endgenerate
 
-    RippleCarryAdder rca_0 (
+    RippleCarryAdder #(48) rca_0 (
         .a(partial_products[0]),
         .b(partial_products[1]),
         .cin(1'b0),
@@ -25,7 +25,7 @@ module mantissa_tree_multiplier (
 
     generate
         for (j = 1; j < 23; j = j + 1) begin : gen_tree_reduction
-            RippleCarryAdder rca (
+            RippleCarryAdder #(48) rca (
                 .a(intermediate_sums[j-1]),
                 .b(partial_products[j+1]),
                 .cin(1'b0),

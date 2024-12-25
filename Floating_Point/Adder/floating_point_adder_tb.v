@@ -1,15 +1,14 @@
 `timescale 1ns / 1ps
-module floating_point_cla_tb #(parameter XLEN = 32);
-    reg [XLEN-1:0] A, B;
-    reg overflow, underflow, exception;
-    wire [XLEN-1:0] result;
+module floating_point_cla_tb #(parameter W = 32);
+    reg [W-1:0] A, B;
+    wire [W-1:0] result;
     real value;
-    floating_point_cla #(32) F_Add (.in1(A), .in2(B), .result(result));
+    floating_point_cla #(32) F_Add (.a(A), .b(B), .sum(result));
 
     initial  
     begin
-        A = 32'b0_10000000_10011001100110011001100;  // 3.2
-        B = 32'b0_10000001_00001100110011001100110;  // 4.2
+        A = 32'b0_10000000_10011001100110011001100;
+        B = 32'b0_10000001_00001100110011001100110;
         #20
         A = 32'b0_01111110_01010001111010111000010;  // 0.66
         B = 32'b0_01111110_00000101000111101011100;  // 0.51
@@ -35,82 +34,37 @@ module floating_point_cla_tb #(parameter XLEN = 32);
 
     initial
     begin
-        // Checking overflow/underflow status based on the result
-        overflow = 0;
-        underflow = 0;
-
-        #15
         value = (2 ** (result[30:23] - 127)) * ($itor({1'b1, result[22:0]}) / (2 ** 23)) * ((-1) ** result[31]);
 
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-        $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", 3.2 + 4.2, value, overflow, underflow);
+        $display("Expected Value : %f Result : %f", 3.2 + 4.2, value);
 
         #20
         value =(2**(result[30:23]-127))*($itor({1'b1,result[22:0]})/2**23)*((-1)**(result[31]));
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-        $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", 0.66 + 0.51, value, overflow, underflow);
+        $display("Expected Value : %f Result : %f", 0.66 + 0.51, value);
 
         #20
         value =(2**(result[30:23]-127))*($itor({1'b1,result[22:0]})/2**23)*((-1)**(result[31]));
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-        $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", -0.5 - 6.4, value, overflow, underflow);
+        $display("Expected Value : %f Result : %f", -0.5 - 6.4, value);
 
         #20
         value =(2**(result[30:23]-127))*($itor({1'b1,result[22:0]})/2**23)*((-1)**(result[31]));
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-        $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", -0.5 + 6.4, value, overflow, underflow);
+        $display("Expected Value : %f Result : %f", -0.5 + 6.4, value);
 
         #20
         value =(2**(result[30:23]-127))*($itor({1'b1,result[22:0]})/2**23)*((-1)**(result[31]));
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-       $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", 2.8235295 - 0.9411765, value, overflow, underflow);
+       $display("Expected Value : %f Result : %f", 2.8235295 - 0.9411765, value);
 
         #20
         value =(2**(result[30:23]-127))*($itor({1'b1,result[22:0]})/2**23)*((-1)**(result[31]));
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-        $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", 1.0 - 1.0, value, overflow, underflow);
+        $display("Expected Value : %f Result : %f", 1.0 - 1.0, value);
 
         #20
         value =(2**(result[30:23]-127))*($itor({1'b1,result[22:0]})/2**23)*((-1)**(result[31]));
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-        $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", 10.0 + (-10.0), value, overflow, underflow);
+        $display("Expected Value : %f Result : %f", 10.0 + (-10.0), value);
 
         #20
         value =(2**(result[30:23]-127))*($itor({1'b1,result[22:0]})/2**23)*((-1)**(result[31]));
-        if (result[30:23] == 8'b11111111) begin
-            overflow = 1;
-        end else if (result[30:23] == 8'b00000000) begin
-            underflow = 1;
-        end
-        $display("Expected Value : %f Result : %f Overflow: %b Underflow: %b", 1.5 + 1.5, value, overflow, underflow);
+        $display("Expected Value : %f Result : %f", 1.5 + 1.5, value);
         $finish;
     end
 endmodule

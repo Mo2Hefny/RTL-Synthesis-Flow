@@ -28,29 +28,14 @@ module floating_point_mt (
     );
 
     // Step 5: Normalize result
-    wire [22:0] mant_res; 
-    wire [7:0] exp_res;  
     wire mant_mult_msb = mant_mult[47];
-
-    assign mant_res = mant_mult_msb ? mant_mult[46:24] : mant_mult[45:23];
-    assign exp_res = mant_mult_msb ? exp_sum + 1 : exp_sum;
+    wire [22:0] mant_res = mant_mult_msb ? mant_mult[46:24] : mant_mult[45:23];
+    wire [7:0] exp_res = mant_mult_msb ? exp_sum + 1 : exp_sum;
 
     // Step 6: Denormalization handling
-    reg [22:0] denorm_mant_res;
-    reg [7:0] denorm_exp_res;
-    reg is_denorm;
-
-    always @(*) begin
-        if (exp_sum[9]) begin
-            is_denorm = 1;
-            denorm_exp_res = 8'b0;
-            denorm_mant_res = mant_mult[46:24] >> (1 - exp_sum);
-        end else begin
-            is_denorm = 0;
-            denorm_exp_res = exp_res;
-            denorm_mant_res = mant_res;
-        end
-    end
+    wire is_denorm = exp_sum[9];
+    wire [22:0] denorm_mant_res = mant_mult[46:24] >> (1 - exp_sum);
+    wire [7:0] denorm_exp_res = is_denorm ? 8'b0 : exp_res;
 
     // Step 7: Handle special cases
     wire a_is_zero = (a[30:0] == 31'b0);       
@@ -82,6 +67,6 @@ module floating_point_mt (
         (is_denorm) ? {sign_res, 8'b0, denorm_mant_res} :
 
         // Case 7: Normal result
-        {sign_res, denorm_exp_res[7:0], denorm_mant_res};
+        {sign_res, denorm_exp_res[7:0], mant_res};
 
 endmodule
