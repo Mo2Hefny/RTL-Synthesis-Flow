@@ -82,6 +82,12 @@ module tb_sequential_multiplier;
         wait (done);
         $display("Test 6: a = %d, b = %d, product = %d (Expected: %d)", a, b, product, expected);
 
+        // Test 7: Random values
+        #10 a = 32'h0000000A; b = 32'h0000000B; start = 1; // 10 * 11 = 110
+        #10 start = 0;
+        wait (done);
+        $display("Test 7: a = %d, b = %d, product = %d (Expected: 110)", a, b, product);
+
         // End simulation
         #50 $stop;
     end

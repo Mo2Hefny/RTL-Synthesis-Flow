@@ -1,72 +1,179 @@
-module floating_point_alu_tb (
-    input [31:0] a,
-    input [31:0] b,
-    output [31:0] result,
-    output overflow      
-);
+`timescale 1ns / 1ps
 
-    // Step 1: Extract IEEE 754 fields
-    wire sign_a = a[31];
-    wire sign_b = b[31];
-    wire [7:0] exp_a = a[30:23];
-    wire [7:0] exp_b = b[30:23];
-    wire [23:0] mant_a = (exp_a == 8'b0) ? {1'b0, a[22:0]} : {1'b1, a[22:0]}; 
-    wire [23:0] mant_b = (exp_b == 8'b0) ? {1'b0, b[22:0]} : {1'b1, b[22:0]}; 
+module floating_point_alu_tb;
 
-    // Step 2: Calculate sign of the result
-    wire sign_res = sign_a ^ sign_b;
+    reg clk;
+    reg rst;
+    reg start;
+    reg [31:0] a;
+    reg [31:0] b;  
+    reg sel;
+    wire [31:0] result; 
+    wire overflow;
+    wire done;
 
-    // Step 3: Add exponents and subtract bias (127 for 32-bit)
-    wire [9:0] exp_sum = exp_a + exp_b - 8'd127;
-
-    // Step 4: Multiply mantissas using tree-based algorithm
-    wire [47:0] mant_mult;
-    mantissa_tree_multiplier tree_mult (
-        .a(mant_a),
-        .b(mant_b),
-        .product(mant_mult)
+    floating_point_alu uut (
+        .clk(clk),
+        .rst(rst),
+        .start(start),
+        .a(a),
+        .b(b),
+        .sel(sel),
+        .result(result),
+        .overflow(overflow),
+        .done(done)
     );
 
-    // Step 5: Normalize result
-    wire mant_mult_msb = mant_mult[47];
-    wire [22:0] mant_res = mant_mult_msb ? mant_mult[46:24] : mant_mult[45:23];
-    wire [7:0] exp_res = mant_mult_msb ? exp_sum + 1 : exp_sum;
+    task display_result;
+        input [31:0] input_a;
+        input [31:0] input_b;
+        input [31:0] output_res;
+        input overflow_flag;
+        begin
+            $display("A: %h (%f) | B: %h (%f) | Result: %h (%f) | Overflow: %b",
+                    input_a, ieee754_to_real(input_a),
+                    input_b, ieee754_to_real(input_b),
+                    output_res, ieee754_to_real(output_res),
+                    overflow_flag);
+        end
+    endtask
 
-    // Step 6: Denormalization handling
-    wire is_denorm = exp_sum[9];
-    wire [22:0] denorm_mant_res = mant_mult[46:24] >> (1 - exp_sum);
-    wire [7:0] denorm_exp_res = is_denorm ? 8'b0 : exp_res;
+    task assert_result;
+        input [31:0] expected_result;
+        input expected_overflow;
+        begin
+            if (result !== expected_result || overflow !== expected_overflow) begin
+                $display("ASSERTION FAILED: Expected Result = %h (%f), Got = %h (%f) | Expected Overflow = %b, Got = %b",
+                        expected_result, ieee754_to_real(expected_result),
+                        result, ieee754_to_real(result),
+                        expected_overflow, overflow);
+            end else begin
+                $display("ASSERTION PASSED: Result = %h (%f) | Overflow = %b", 
+                        result, ieee754_to_real(result), overflow);
+            end
+        end
+    endtask
 
-    // Step 7: Handle special cases
-    wire a_is_zero = (a[30:0] == 31'b0);       
-    wire b_is_zero = (b[30:0] == 31'b0);       
-    wire a_is_inf = (exp_a == 8'b11111111) && (a[22:0] == 0);
-    wire b_is_inf = (exp_b == 8'b11111111) && (b[22:0] == 0);
-    wire a_is_nan = (exp_a == 8'b11111111) && (a[22:0] != 0);
-    wire b_is_nan = (exp_b == 8'b11111111) && (b[22:0] != 0);
+    // Function to convert IEEE 754 binary representation to real number
+    function real ieee754_to_real(input [31:0] ieee);
+        reg sign;
+        reg [7:0] exp;
+        reg [22:0] mantissa;
+        real fraction;
+        begin
+            sign = ieee[31];
+            exp = ieee[30:23];
+            mantissa = ieee[22:0];
+            fraction = 1.0 + (mantissa / (1 << 23));
+            ieee754_to_real = (sign ? -1.0 : 1.0) * fraction * (2.0 ** (exp - 127));
+        end
+    endfunction
 
-    assign overflow = (exp_res > 8'd254);
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // Generate clock with period of 10ns
+    end
 
-    assign result = 
-        // Case 1: NaN (either input is NaN)
-        (a_is_nan || b_is_nan) ? 32'h7FC00000 :
+    initial begin
+        // reset
+        rst = 1;
+        start = 1;
+        a = 0;
+        b = 0;
+        @(posedge clk);
+        rst = 0;
 
-        // Case 2: Infinity * 0 (results in NaN)
-        ((a_is_inf && b_is_zero) || (b_is_inf && a_is_zero)) ? 32'h7FC00000 :
+        // Test Case 1: Multiplying two zeros
+        a = 32'h00000000; b = 32'h00000000; // 0 * 0
+        repeat (4) @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h00000000, 1'b0);
 
-        // Case 3: Infinity * finite or Infinity * Infinity
-        (a_is_inf || b_is_inf) ? {sign_res, 8'hFF, 23'b0} :
+        // Test Case 2: Multiplying a zero with a positive number
+        a = 32'h00000000; b = 32'h3F800000; // 0 * 1.0
+        repeat (4) @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h00000000, 1'b0);
 
-        // Case 4: Zero * anything (except Infinity)
-        (a_is_zero || b_is_zero) ? {sign_res, 32'b0} :
+        // Test Case 3: Multiplying a zero with a negative number
+        a = 32'h00000000; b = 32'hBF800000; // 0 * -1.0
+        repeat (4) @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h00000000, 1'b0);
 
-        // Case 5: Overflow (result exponent too large)
-        overflow ? {sign_res, 8'hFF, 23'b0} :
+        // Test Case 4: Multiplying two positive numbers
+        a = 32'h3F800000; b = 32'h40000000; // 1.0 * 2.0
+        repeat (4) @(posedge clk);
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h40000000, 1'b0);
 
-        // Case 6: Denormalized result
-        (is_denorm) ? {sign_res, 8'b0, denorm_mant_res} :
+        // Test Case 5: Multiplying two negative numbers
+        a = 32'hBF800000; b = 32'hBF800000; // -1.0 * -1.0
+        repeat (4) @(posedge clk);
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h3F800000, 1'b0);
 
-        // Case 7: Normal result
-        {sign_res, denorm_exp_res[7:0], mant_res};
+        // Test Case 6: Multiplying a positive and a negative number
+        a = 32'h3F800000; b = 32'hBF800000; // 1.0 * -1.0
+        repeat (4) @(posedge clk);
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'hBF800000, 1'b0);
+
+        // Test Case 7: Multiplying numbers leading to overflow
+        a = 32'h7F7FFFFF; b = 32'h40000000; // Largest finite * 2
+        repeat (4) @(posedge clk);
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h7F800000, 1'b1); // Expected infinity with overflow
+
+        // Test Case 8: Multiplying small numbers (denormalized case)
+        a = 32'h00800000; b = 32'h00800000; // Smallest normalized * Smallest normalized
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h00000000, 1'b0); // Expected denormalized product
+
+        // Test Case 9: Multiplying numbers with large exponent difference
+        a = 32'h7F800000; b = 32'h00000001; // Infinity * Smallest subnormal
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h7F800000, 1'b0); // Expected infinity
+
+        // Test Case 10: Multiplying random numbers
+        a = 32'h41200000; b = 32'hC1A00000; // 10.0 * -20.0
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'hc3480000, 1'b0); // Expected -200.0
+
+        // Test Case 11: Multiplying infinity with a finite number
+        a = 32'h7F800000; b = 32'h3F800000; // Infinity * 1.0
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h7F800000, 1'b1); // Expected infinity
+
+        // Test Case 12: Multiplying infinity with infinity
+        a = 32'h7F800000; b = 32'h7F800000; // Infinity * Infinity
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h7F800000, 1'b0); // Expected infinity
+
+        // Test Case 13: Multiplying infinity with NaN
+        a = 32'h7F800000; b = 32'h7FC00000; // Infinity * NaN
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h7FC00000, 1'b0); // Expected NaN
+
+        // Test Case 14: Multiplying NaN with a finite number
+        a = 32'h7FC00000; b = 32'h3F800000; // NaN * 1.0
+        @(posedge clk);
+        display_result(a, b, result, overflow);
+        assert_result(32'h7FC00000, 1'b1); // Expected NaN
+
+        // Test Case 15: Multiplying NaN with NaN
+
+        $stop;
+    end
 
 endmodule
