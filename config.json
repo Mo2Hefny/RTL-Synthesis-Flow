@@ -19,8 +19,8 @@
     ]
   },
 
-  "DESIGN_NAME": "carry_bypass_adder",
-  "VERILOG_FILES": "dir::Basic_RTLs/Adders/carry_bypass_adder/carry_bypass_adder.v",
+  "DESIGN_NAME": "floating_point_alu",
+  "VERILOG_FILES": "dir::src/floating_point_alu.v",
   "PNR_SDC_FILE": "dir::sdc_file.sdc",
   "FP_PDN_HORIZONTAL_LAYER": null,
   "FP_SIZING": "absolute",
