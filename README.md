@@ -84,7 +84,7 @@ Testbenches verify:
 
 
 ## <img  align= center width=50px height=50px src="https://media1.giphy.com/media/ggoKD4cFbqd4nyugH2/giphy.gif?cid=6c09b9527jpi8kfxsj6eswuvb7ay2p0rgv57b7wg0jkihhhv&rid=giphy.gif&ct=s"> License <a id = "license"></a>
-This software is licensed under MIT License, See [License](https://github.com/eslamwageh/Grades-auto-filler/blob/main/LICENSE) for more information ©Moamen Hefny.
+This software is licensed under MIT License, See [License](https://github.com/Mo2Hefny/RTL-Synthesis-Flow/blob/main/LICENSE) for more information ©Moamen Hefny.
 ---
 
 For detailed documentation and reports, refer to the repository files.
